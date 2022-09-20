@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 
 namespace SuperHeroAPI.Controllers
 {
@@ -8,13 +9,6 @@ namespace SuperHeroAPI.Controllers
     public class SuperHeroController : ControllerBase
     {
         private static List<SuperHero> heros = new List<SuperHero> {
-                 new SuperHero {
-                     Id = 1,
-                     Name="Nazim Uddin",
-                     FirstName="Nazim",
-                     LastName="Uddin",
-                     Place="Dhaka"
-                 },
                   new SuperHero {
                      Id = 2,
                      Name="Emon Shah",
@@ -23,17 +17,23 @@ namespace SuperHeroAPI.Controllers
                      Place="Kurigram"
                  }
             };
+        private readonly DataContext _context;
+
+        public SuperHeroController(DataContext context)
+        {
+            _context = context;
+        }
 
         [HttpGet]
         public async Task<ActionResult<List<SuperHero>>> Get()
         {
-            return Ok(heros);
+            return Ok(await _context.superHeroes.ToListAsync());
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<SuperHero>> Get(int id)
         {
-            var hero = heros.Find(h => h.Id == id);
+            var hero = await _context.superHeroes.FindAsync(id);
             if (hero == null)
             {
                 return BadRequest("Hero Not Found."); 
@@ -45,8 +45,9 @@ namespace SuperHeroAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<List<SuperHero>>> AddHero(SuperHero hero)
         {
-            heros.Add(hero);
-            return Ok(heros);
+            _context.superHeroes.Add(hero);
+            await _context.SaveChangesAsync();
+            return Ok(await _context.superHeroes.ToListAsync());
         }
 
         [HttpPut]
